@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+@theme {
+  --font-serif: "Cormorant Garamond", Georgia, serif;
+  --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  --font-mono: "Space Mono", monospace;
+  --color-gold-300: #e5d3b3;
+  --color-gold-400: #d4af37;
+  --color-gold-500: #c5a880;
+  --color-gold-600: #9e7f53;
+  --color-dark-900: #121212;
+  --color-dark-950: #0a0a0a;
+}
+
+/* Base custom luxury smooth transitions */
+html {
+  scroll-behavior: smooth;
+  background-color: #0a0a0a;
+  color: #f5f2eb;
+  font-family: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+}
+
+/* Elegant font helper classes */
+.font-editorial {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  letter-spacing: -0.015em;
+}
+
+.font-editorial-italic {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-style: italic;
+}
+
+/* Subtle Film Grain Texture Overlay */
+.luxury-noise {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 0);
+  background-size: 24px 24px;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0a0a0a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #27272a;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #c5a880;
+}
+
+/* Text balance utility */
+.text-balance {
+  text-wrap: balance;
+}

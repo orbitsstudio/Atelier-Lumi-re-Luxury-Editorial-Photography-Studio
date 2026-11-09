@@ -1,0 +1,6 @@
+{
+  "name": "Atelier Lumière | Luxury Editorial Photography Studio",
+  "description": "World-class luxury photography studio capturing bespoke weddings, editorial fashion, fine art portraits, and private commissions with timeless elegance.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

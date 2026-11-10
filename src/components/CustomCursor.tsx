@@ -6,11 +6,20 @@ export default function CustomCursor() {
   const [isHovered, setIsHovered] = useState(false);
   const [cursorText, setCursorText] = useState('');
   const [isVisible, setIsVisible] = useState(false);
+  const [isEnabled, setIsEnabled] = useState(false);
 
   useEffect(() => {
-    // Only enable on desktop pointer devices
+    // Only enable on desktop pointer devices that don't prefer reduced motion
     const isTouch = window.matchMedia('(pointer: coarse)').matches;
-    if (isTouch) return;
+    const isSmallScreen = window.innerWidth <= 1024;
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (isTouch || isSmallScreen || prefersReducedMotion) {
+      setIsEnabled(false);
+      return;
+    }
+
+    setIsEnabled(true);
 
     const handleMouseMove = (e: MouseEvent) => {
       setPosition({ x: e.clientX, y: e.clientY });
@@ -48,6 +57,8 @@ export default function CustomCursor() {
 
   // Smooth trailing effect
   useEffect(() => {
+    if (!isEnabled) return;
+
     let animationFrameId: number;
     const lerp = (start: number, end: number, factor: number) => start + (end - start) * factor;
 
@@ -61,9 +72,9 @@ export default function CustomCursor() {
 
     animationFrameId = requestAnimationFrame(updateTrailing);
     return () => cancelAnimationFrame(animationFrameId);
-  }, [position]);
+  }, [position, isEnabled]);
 
-  if (!isVisible) return null;
+  if (!isEnabled || !isVisible) return null;
 
   return (
     <>

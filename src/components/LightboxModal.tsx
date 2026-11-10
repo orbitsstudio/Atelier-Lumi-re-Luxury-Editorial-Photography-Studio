@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { X, ChevronLeft, ChevronRight, Info, ZoomIn, ZoomOut, MapPin, Calendar, Camera } from 'lucide-react';
 import { GalleryItem } from '../data/photographyData';
 
@@ -17,8 +17,10 @@ export default function LightboxModal({
   onNavigate,
   onInquireStyle,
 }: LightboxModalProps) {
-  const [showInfo, setShowInfo] = useState(true);
+  const [showInfo, setShowInfo] = useState(false);
   const [isZoomed, setIsZoomed] = useState(false);
+  const touchStartX = useRef<number | null>(null);
+  const touchEndX = useRef<number | null>(null);
 
   useEffect(() => {
     if (!item) return;
@@ -53,26 +55,54 @@ export default function LightboxModal({
     onNavigate(allItems[nextIndex]);
   };
 
+  // Mobile Touch Swipe Handlers
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.targetTouches[0].clientX;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    touchEndX.current = e.targetTouches[0].clientX;
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStartX.current || !touchEndX.current) return;
+    const distance = touchStartX.current - touchEndX.current;
+    const isSignificantSwipe = Math.abs(distance) > 50;
+
+    if (isSignificantSwipe) {
+      if (distance > 0) {
+        handleNext(); // swipe left
+      } else {
+        handlePrev(); // swipe right
+      }
+    }
+    touchStartX.current = null;
+    touchEndX.current = null;
+  };
+
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 backdrop-blur-xl animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/98 backdrop-blur-2xl animate-in fade-in duration-200 select-none"
       role="dialog"
       aria-modal="true"
       aria-label={item.title}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
     >
       {/* Top Bar Controls */}
-      <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-6 py-4 bg-gradient-to-b from-black/80 to-transparent">
-        <div className="flex items-center gap-3 text-xs tracking-widest text-[#a1a1aa] font-mono">
-          <span>{String(currentIndex + 1).padStart(2, '0')}</span>
+      <div className="absolute top-0 left-0 right-0 z-30 flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-b from-black/90 via-black/60 to-transparent">
+        <div className="flex items-center gap-2 sm:gap-3 text-xs tracking-widest text-[#a1a1aa] font-mono">
+          <span className="text-[#f5f2eb] font-semibold">{String(currentIndex + 1).padStart(2, '0')}</span>
           <span>/</span>
           <span>{String(allItems.length).padStart(2, '0')}</span>
           <span className="hidden sm:inline text-[#c5a880]">· {item.categoryLabel}</span>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1 sm:gap-3">
           <button
             onClick={() => setIsZoomed(!isZoomed)}
-            className="p-2 text-[#f5f2eb]/80 hover:text-[#f5f2eb] hover:bg-white/10 rounded-full transition-colors"
+            className="w-10 h-10 flex items-center justify-center text-[#f5f2eb]/80 hover:text-[#f5f2eb] active:bg-white/10 rounded-full transition-colors"
             title={isZoomed ? 'Reset view' : 'Zoom into detail'}
             aria-label="Toggle zoom"
           >
@@ -81,10 +111,10 @@ export default function LightboxModal({
 
           <button
             onClick={() => setShowInfo(!showInfo)}
-            className={`p-2 rounded-full transition-colors ${
+            className={`w-10 h-10 flex items-center justify-center rounded-full transition-colors ${
               showInfo
-                ? 'text-[#c5a880] bg-[#c5a880]/10'
-                : 'text-[#f5f2eb]/80 hover:text-[#f5f2eb] hover:bg-white/10'
+                ? 'text-[#c5a880] bg-[#c5a880]/15'
+                : 'text-[#f5f2eb]/80 hover:text-[#f5f2eb] active:bg-white/10'
             }`}
             title="Toggle details & EXIF panel"
             aria-label="Toggle details panel"
@@ -94,7 +124,7 @@ export default function LightboxModal({
 
           <button
             onClick={onClose}
-            className="p-2 text-[#f5f2eb] hover:text-[#c5a880] hover:bg-white/10 rounded-full transition-colors ml-2"
+            className="w-11 h-11 flex items-center justify-center text-[#f5f2eb] hover:text-[#c5a880] active:bg-white/10 rounded-full transition-colors ml-1"
             title="Close viewer (Esc)"
             aria-label="Close lightbox"
           >
@@ -104,10 +134,10 @@ export default function LightboxModal({
       </div>
 
       {/* Main Image Viewport */}
-      <div className="relative w-full h-full flex items-center justify-center p-4 sm:p-12 overflow-hidden">
+      <div className="relative w-full h-full flex items-center justify-center p-2 sm:p-8 md:p-12 overflow-hidden">
         <div
-          className={`relative max-w-full max-h-full transition-all duration-300 ${
-            isZoomed ? 'cursor-zoom-out scale-125' : 'cursor-zoom-in'
+          className={`relative max-w-full max-h-full transition-all duration-300 flex items-center justify-center ${
+            isZoomed ? 'cursor-zoom-out scale-125 md:scale-135' : 'cursor-zoom-in'
           }`}
           onClick={() => setIsZoomed(!isZoomed)}
         >
@@ -115,34 +145,34 @@ export default function LightboxModal({
             src={item.imageSrc}
             alt={item.title}
             referrerPolicy="no-referrer"
-            className="max-h-[82vh] max-w-[92vw] object-contain shadow-2xl rounded-sm mx-auto select-none"
+            className="max-h-[75vh] sm:max-h-[82vh] max-w-[94vw] object-contain shadow-2xl rounded-sm mx-auto select-none"
           />
         </div>
       </div>
 
-      {/* Navigation Arrows */}
+      {/* Navigation Arrows (Thumbs friendly) */}
       <button
         onClick={handlePrev}
-        className="absolute left-4 top-1/2 -translate-y-1/2 z-20 p-3 text-[#f5f2eb]/70 hover:text-[#f5f2eb] hover:bg-white/10 rounded-full transition-all duration-200"
+        className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-20 w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center text-[#f5f2eb]/80 hover:text-[#f5f2eb] bg-black/40 hover:bg-black/70 backdrop-blur-sm rounded-full transition-all duration-200"
         aria-label="Previous photograph"
       >
-        <ChevronLeft className="w-7 h-7" />
+        <ChevronLeft className="w-6 h-6 sm:w-7 sm:h-7" />
       </button>
 
       <button
         onClick={handleNext}
-        className="absolute right-4 top-1/2 -translate-y-1/2 z-20 p-3 text-[#f5f2eb]/70 hover:text-[#f5f2eb] hover:bg-white/10 rounded-full transition-all duration-200"
+        className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-20 w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center text-[#f5f2eb]/80 hover:text-[#f5f2eb] bg-black/40 hover:bg-black/70 backdrop-blur-sm rounded-full transition-all duration-200"
         aria-label="Next photograph"
       >
-        <ChevronRight className="w-7 h-7" />
+        <ChevronRight className="w-6 h-6 sm:w-7 sm:h-7" />
       </button>
 
       {/* Bottom Technical & Editorial Information Drawer */}
       {showInfo && (
-        <div className="absolute bottom-0 left-0 right-0 z-20 bg-gradient-to-t from-black via-black/90 to-transparent pt-8 pb-6 px-6 sm:px-12 pointer-events-auto">
-          <div className="max-w-6xl mx-auto flex flex-col md:flex-row md:items-end justify-between gap-6 border-t border-[#27272a] pt-4">
+        <div className="absolute bottom-0 left-0 right-0 z-30 bg-gradient-to-t from-black via-black/95 to-transparent pt-6 pb-6 px-4 sm:px-8 md:px-12 pointer-events-auto max-h-[45vh] overflow-y-auto">
+          <div className="max-w-6xl mx-auto flex flex-col md:flex-row md:items-end justify-between gap-4 sm:gap-6 border-t border-[#27272a] pt-4">
             <div className="space-y-1.5 max-w-xl">
-              <div className="flex items-center gap-3 text-xs text-[#c5a880] tracking-wider uppercase font-medium">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-[11px] sm:text-xs text-[#c5a880] tracking-wider uppercase font-medium">
                 <span>{item.categoryLabel}</span>
                 <span aria-hidden="true">·</span>
                 <span className="flex items-center gap-1 text-[#a1a1aa]">
@@ -154,7 +184,7 @@ export default function LightboxModal({
                 </span>
               </div>
 
-              <h2 className="text-xl sm:text-2xl font-editorial font-light text-[#f5f2eb]">
+              <h2 className="text-lg sm:text-2xl font-editorial font-light text-[#f5f2eb]">
                 {item.title}
               </h2>
               <p className="text-xs sm:text-sm text-[#a1a1aa] leading-relaxed">
@@ -162,15 +192,15 @@ export default function LightboxModal({
               </p>
             </div>
 
-            {/* EXIF Data Panel (Zero-pill discipline: unboxed clean text) */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 text-xs text-[#a1a1aa] font-mono">
-              <div className="space-y-0.5 border-l border-[#27272a] pl-4">
+            {/* EXIF Data Panel */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 text-xs text-[#a1a1aa] font-mono pt-2 sm:pt-0">
+              <div className="space-y-0.5 border-l border-[#27272a] pl-3 sm:pl-4">
                 <div className="flex items-center gap-1.5 text-[#e5d3b3]">
                   <Camera className="w-3.5 h-3.5" />
                   <span>{item.exif.camera}</span>
                 </div>
                 <div>{item.exif.lens}</div>
-                <div className="text-[11px] text-[#71717a]">
+                <div className="text-[10px] sm:text-[11px] text-[#71717a]">
                   {item.exif.aperture} · {item.exif.shutter} · {item.exif.iso}
                 </div>
               </div>
@@ -181,7 +211,7 @@ export default function LightboxModal({
                     onClose();
                     onInquireStyle(item);
                   }}
-                  className="px-4 py-2 text-[11px] font-sans font-medium tracking-widest uppercase text-[#0a0a0a] bg-[#c5a880] hover:bg-[#d4af37] transition-colors rounded-sm whitespace-nowrap"
+                  className="w-full sm:w-auto px-4 py-2.5 text-[11px] font-sans font-medium tracking-widest uppercase text-[#0a0a0a] bg-[#c5a880] hover:bg-[#d4af37] transition-colors rounded-sm whitespace-nowrap min-h-[40px] flex items-center justify-center"
                 >
                   Commission This Style
                 </button>
